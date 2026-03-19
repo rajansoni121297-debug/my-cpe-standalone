@@ -1,0 +1,614 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import './Assessments.css';
+
+const assessmentData = [
+  { name: 'QuickBooks - QBO', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'QuickBooks - QBO', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'CCH Axcess + ProSystem fx Audit Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'SIM', count: 4 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'UltraTax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'SUB', count: 5 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'Lacerte Tax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 15 }, { type: 'SIM', count: 3 }, { type: 'SUB', count: 2 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'Drake Tax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'CCH Axcess Tax Software', level: 'Basic', questionTypes: [{ type: 'AI Video' }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'NPO Audit', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'AI Video' }], duration: '40', invited: 1, completedNum: 1, completedDen: 1 },
+  { name: 'Yellow Book (GAGAS)', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 10 }, { type: 'SIM', count: 5 }, { type: 'SUB', count: 3 }, { type: 'AI Video' }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+];
+
+const qTypeColors = {
+  'MCQ': { bg: '#eef2ff', color: '#4F46E5', border: '#c7d2fe' },
+  'SIM': { bg: '#fef3c7', color: '#b45309', border: '#fcd34d' },
+  'SUB': { bg: '#dcfce7', color: '#16a34a', border: '#bbf7d0' },
+  'AI Video': { bg: '#fce7f3', color: '#be185d', border: '#fbcfe8' },
+  'ESSAY': { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
+};
+
+const PRICE_PER_ASSESSMENT = 99;
+
+const Assessments = ({ onNavigate }) => {
+  const [search, setSearch] = useState('');
+  const [level, setLevel] = useState('All');
+  const [domain, setDomain] = useState('All');
+  const [role, setRole] = useState('All');
+  const [country, setCountry] = useState('All');
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [modalAssessments, setModalAssessments] = useState([]);
+  const [questionToggles, setQuestionToggles] = useState({});
+  const [users, setUsers] = useState([{ email: '', firstName: '', lastName: '' }]);
+  const [step1Open, setStep1Open] = useState(true);
+  const [step2Open, setStep2Open] = useState(true);
+
+  const filteredData = assessmentData.filter((item) => {
+    if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (level !== 'All' && item.level !== level) return false;
+    return true;
+  });
+
+  const toggleRow = (idx) => {
+    setSelectedRows((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const toggleAll = () => {
+    if (selectedRows.length === filteredData.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(filteredData.map((_, i) => i));
+    }
+  };
+
+  const clearFilters = () => {
+    setSearch('');
+    setLevel('All');
+    setDomain('All');
+    setRole('All');
+    setCountry('All');
+  };
+
+  // Open modal
+  const openAssignModal = () => {
+    if (selectedRows.length === 0) return;
+    const selected = selectedRows.map((idx) => ({ ...filteredData[idx], originalIdx: idx }));
+    setModalAssessments(selected);
+
+    // Initialize question toggles: all checked by default
+    const toggles = {};
+    selected.forEach((a, i) => {
+      toggles[i] = {};
+      a.questionTypes.forEach((qt) => {
+        toggles[i][qt.type] = true;
+      });
+    });
+    setQuestionToggles(toggles);
+    setUsers([{ email: '', firstName: '', lastName: '' }]);
+    setStep1Open(true);
+    setStep2Open(true);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
+  // Close modal on Escape key
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape' && showModal) {
+      closeModal();
+    }
+  }, [showModal]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Remove assessment from modal and uncheck in main table
+  const removeModalAssessment = (modalIdx) => {
+    const assessment = modalAssessments[modalIdx];
+    // Uncheck from main table
+    setSelectedRows((prev) => prev.filter((i) => i !== assessment.originalIdx));
+    // Remove from modal list
+    const newAssessments = modalAssessments.filter((_, i) => i !== modalIdx);
+    setModalAssessments(newAssessments);
+    // Rebuild toggles with new indices
+    const newToggles = {};
+    newAssessments.forEach((a, i) => {
+      const oldIdx = modalAssessments.indexOf(a);
+      newToggles[i] = questionToggles[oldIdx] || {};
+    });
+    setQuestionToggles(newToggles);
+    // Close modal if no assessments left
+    if (newAssessments.length === 0) {
+      setShowModal(false);
+    }
+  };
+
+  // Toggle question type for an assessment
+  const toggleQuestionType = (assessmentIdx, qType) => {
+    setQuestionToggles((prev) => ({
+      ...prev,
+      [assessmentIdx]: {
+        ...prev[assessmentIdx],
+        [qType]: !prev[assessmentIdx]?.[qType],
+      },
+    }));
+  };
+
+  // User row management
+  const addUserRow = () => {
+    setUsers((prev) => [...prev, { email: '', firstName: '', lastName: '' }]);
+  };
+
+  const removeUserRow = (idx) => {
+    if (users.length <= 1) return;
+    setUsers((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateUser = (idx, field, value) => {
+    setUsers((prev) => prev.map((u, i) => (i === idx ? { ...u, [field]: value } : u)));
+  };
+
+  // Calculations
+  const numAssessments = modalAssessments.length;
+  const numUsers = users.length;
+  const totalAssessments = numAssessments * numUsers;
+  const totalPayment = totalAssessments * PRICE_PER_ASSESSMENT;
+  const amountPerUser = numAssessments * PRICE_PER_ASSESSMENT;
+
+  return (
+    <div className="assessments-page">
+      {/* Breadcrumb */}
+      <div className="breadcrumb">
+        <span className="breadcrumb-link" onClick={() => onNavigate && onNavigate('dashboard')}>Home</span>
+        <span className="breadcrumb-sep">&gt;</span>
+        <span className="breadcrumb-current">Assessments</span>
+      </div>
+
+      <div className="assessments-title-row">
+        <div>
+          <h1 className="page-title">Assessment</h1>
+          <p className="page-subtitle">Assign assessments to new hires and evaluate role-specific competencies.</p>
+        </div>
+        <button
+          className={`btn-assign-assessment ${selectedRows.length > 0 ? 'active' : ''}`}
+          disabled={selectedRows.length === 0}
+          onClick={openAssignModal}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          Assign Assessment
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="filters-row">
+        <div className="search-input-wrap">
+          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search assessments..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-select-wrap">
+          <label className="filter-float-label">Level</label>
+          <select value={level} onChange={(e) => setLevel(e.target.value)} className="filter-select">
+            <option>All</option>
+            <option>Basic</option>
+            <option>Intermediate</option>
+            <option>Advance</option>
+          </select>
+        </div>
+
+        <div className="filter-select-wrap">
+          <label className="filter-float-label">Domain</label>
+          <select value={domain} onChange={(e) => setDomain(e.target.value)} className="filter-select">
+            <option>All</option>
+            <option>Accounting</option>
+            <option>Auditing</option>
+            <option>Tax</option>
+            <option>Others</option>
+          </select>
+        </div>
+
+        <div className="filter-select-wrap">
+          <label className="filter-float-label">Role</label>
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="filter-select">
+            <option>All</option>
+          </select>
+        </div>
+
+        <div className="filter-select-wrap">
+          <label className="filter-float-label">Country</label>
+          <select value={country} onChange={(e) => setCountry(e.target.value)} className="filter-select">
+            <option>All</option>
+          </select>
+        </div>
+
+        <button className="btn-apply">Apply</button>
+        <button className="btn-clear" onClick={clearFilters}>Clear All</button>
+      </div>
+
+      {/* Info Banner */}
+      <div className="info-banner">
+        <div className="info-banner-left">
+          <span className="info-banner-text">You can assign any assessment for a fee of <strong>$99 per assessment</strong>.</span>
+          <span className="free-credit-badge">1 Free Assessment Credit Available</span>
+        </div>
+        <span className="info-banner-link">
+          {selectedRows.length > 0
+            ? <span className="selected-count">{selectedRows.length} assessment{selectedRows.length > 1 ? 's' : ''} selected</span>
+            : 'Select assessment to proceed'
+          }
+        </span>
+      </div>
+
+      {/* Table */}
+      <div className="assessment-table-wrap">
+        <table className="assessment-table">
+          <thead>
+            <tr>
+              <th className="th-check">
+                <input
+                  type="checkbox"
+                  checked={selectedRows.length === filteredData.length && filteredData.length > 0}
+                  onChange={toggleAll}
+                />
+              </th>
+              <th>Assessment Name</th>
+              <th>Level</th>
+              <th>Questions</th>
+              <th>Duration(Min)</th>
+              <th>Invited</th>
+              <th>Completed</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((item, idx) => (
+              <tr key={idx} className={selectedRows.includes(idx) ? 'row-selected' : ''}>
+                <td className="td-check">
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.includes(idx)}
+                    onChange={() => toggleRow(idx)}
+                  />
+                </td>
+                <td className="td-name">{item.name}</td>
+                <td>{item.level}</td>
+                <td>
+                  <div className="question-types">
+                    {item.questionTypes.map((qt, i) => {
+                      const colors = qTypeColors[qt.type] || qTypeColors['MCQ'];
+                      return (
+                        <span
+                          key={i}
+                          className="q-type-tag"
+                          style={{ background: colors.bg, color: colors.color, border: `1px solid ${colors.border}` }}
+                        >
+                          {qt.count ? `${qt.count} ${qt.type}` : qt.type}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </td>
+                <td>{item.duration}</td>
+                <td>
+                  <span className={item.invited > 0 ? 'invited-green' : 'invited-zero'}>
+                    {item.invited}
+                  </span>
+                </td>
+                <td>{item.completedDen > 0 ? `${item.completedNum}/${item.completedDen}` : '-'}</td>
+                <td>
+                  <div className="action-icons">
+                    {/* Assign users icon */}
+                    <button className="action-icon-btn" title="Assign Users">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                      </svg>
+                    </button>
+                    {/* Bell icon */}
+                    <button className="action-icon-btn" title="Send Notification">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                      </svg>
+                    </button>
+                    {/* View icon */}
+                    <button className="action-icon-btn" title="View">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ===== Assign Assessment Modal ===== */}
+      {showModal && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
+          <div className="modal-container">
+            {/* Modal Header */}
+            <div className="modal-header">
+              <h2 className="modal-title">Assign Assessment</h2>
+              <button className="modal-close-btn" onClick={closeModal}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* ===== Step 1: Assessments List ===== */}
+              <div className="modal-step">
+                <div className="modal-step-header" onClick={() => setStep1Open(!step1Open)}>
+                  <div className="modal-step-header-left">
+                    <span className="step-icon step-icon-green">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </span>
+                    <span className="step-label">Step 1</span>
+                    <span className="step-title">Assessments List</span>
+                  </div>
+                  <div className="modal-step-header-right">
+                    <span className="step-selected-count">{modalAssessments.length} assessment{modalAssessments.length !== 1 ? 's' : ''} selected</span>
+                    <span className="step-gear-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      </svg>
+                    </span>
+                    <span className={`step-chevron ${step1Open ? 'open' : ''}`}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <div className={`modal-step-content ${step1Open ? 'expanded' : 'collapsed'}`}>
+                  <div className="modal-table-wrap">
+                    <table className="modal-assessment-table">
+                      <thead>
+                        <tr>
+                          <th>Assessment Name</th>
+                          <th>Level</th>
+                          <th>Questions</th>
+                          <th>Duration(Min)</th>
+                          <th>Invited</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {modalAssessments.map((item, idx) => (
+                          <tr key={idx}>
+                            <td className="td-name">{item.name}</td>
+                            <td>{item.level}</td>
+                            <td>
+                              <div className="modal-question-types">
+                                {item.questionTypes.map((qt, qi) => {
+                                  const colors = qTypeColors[qt.type] || qTypeColors['MCQ'];
+                                  const isChecked = questionToggles[idx]?.[qt.type] !== false;
+                                  return (
+                                    <label
+                                      key={qi}
+                                      className={`modal-q-type-chip ${isChecked ? '' : 'unchecked'}`}
+                                      style={{
+                                        background: isChecked ? colors.bg : '#f5f5f5',
+                                        color: isChecked ? colors.color : '#aaa',
+                                        border: `1px solid ${isChecked ? colors.border : '#ddd'}`,
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => toggleQuestionType(idx, qt.type)}
+                                        className="modal-q-checkbox"
+                                      />
+                                      {qt.type}{qt.count ? `(${qt.count})` : ''}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </td>
+                            <td>{item.duration}</td>
+                            <td>
+                              <span className={item.invited > 0 ? 'invited-green' : 'invited-zero'}>
+                                {item.invited}
+                              </span>
+                            </td>
+                            <td>
+                              <button
+                                className="modal-remove-btn"
+                                title="Remove assessment"
+                                onClick={() => removeModalAssessment(idx)}
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* ===== Step 2: Add Users ===== */}
+              <div className="modal-step">
+                <div className="modal-step-header" onClick={() => setStep2Open(!step2Open)}>
+                  <div className="modal-step-header-left">
+                    <span className="step-icon step-icon-yellow">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 2L11 13"></path>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+                      </svg>
+                    </span>
+                    <span className="step-label">Step 2</span>
+                    <span className="step-title">Add Users</span>
+                  </div>
+                  <div className="modal-step-header-right">
+                    <span className="step-gear-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      </svg>
+                    </span>
+                    <span className={`step-chevron ${step2Open ? 'open' : ''}`}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <div className={`modal-step-content ${step2Open ? 'expanded' : 'collapsed'}`}>
+                  {/* CSV links */}
+                  <div className="modal-csv-links">
+                    <a href="#download" className="csv-link" onClick={(e) => e.preventDefault()}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      Download CSV Template
+                    </a>
+                    <span className="csv-divider">|</span>
+                    <a href="#import" className="csv-link" onClick={(e) => e.preventDefault()}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      Import from CSV
+                    </a>
+                  </div>
+
+                  {/* User rows header */}
+                  <div className="user-rows-header">
+                    <span className="user-col-header user-col-email">Email</span>
+                    <span className="user-col-header user-col-fname">First Name</span>
+                    <span className="user-col-header user-col-lname">Last Name</span>
+                    <span className="user-col-header user-col-num">No. of Assessments</span>
+                    <span className="user-col-header user-col-amount">Amount</span>
+                    <span className="user-col-header user-col-action"></span>
+                  </div>
+
+                  {/* User rows */}
+                  {users.map((user, idx) => (
+                    <div className="user-row" key={idx}>
+                      <div className="user-col user-col-email">
+                        <input
+                          type="email"
+                          placeholder="Enter email"
+                          value={user.email}
+                          onChange={(e) => updateUser(idx, 'email', e.target.value)}
+                          className="user-input"
+                        />
+                      </div>
+                      <div className="user-col user-col-fname">
+                        <input
+                          type="text"
+                          placeholder="First name"
+                          value={user.firstName}
+                          onChange={(e) => updateUser(idx, 'firstName', e.target.value)}
+                          className="user-input"
+                        />
+                      </div>
+                      <div className="user-col user-col-lname">
+                        <input
+                          type="text"
+                          placeholder="Last name"
+                          value={user.lastName}
+                          onChange={(e) => updateUser(idx, 'lastName', e.target.value)}
+                          className="user-input"
+                        />
+                      </div>
+                      <div className="user-col user-col-num">
+                        <span className="user-readonly-value">{numAssessments}</span>
+                      </div>
+                      <div className="user-col user-col-amount">
+                        <span className="user-readonly-value">${amountPerUser}</span>
+                      </div>
+                      <div className="user-col user-col-action">
+                        {users.length > 1 && (
+                          <button
+                            className="modal-remove-btn"
+                            title="Remove user"
+                            onClick={() => removeUserRow(idx)}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <button className="btn-add-user" onClick={addUserRow}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add User
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing Summary */}
+            <div className="modal-pricing-bar">
+              <div className="pricing-card">
+                <span className="pricing-label">Price Per User</span>
+                <span className="pricing-value">${PRICE_PER_ASSESSMENT} / Assessment</span>
+              </div>
+              <div className="pricing-card pricing-card-center">
+                <span className="pricing-label">Total Assessment</span>
+                <span className="pricing-value">{totalAssessments} Assessment{totalAssessments !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="pricing-card">
+                <span className="pricing-label">Total Payment</span>
+                <span className="pricing-value pricing-total">${totalPayment}</span>
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="modal-footer">
+              <button className="btn-modal-cancel" onClick={closeModal}>Cancel</button>
+              <button className="btn-modal-proceed">Proceed to Payment</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Assessments;

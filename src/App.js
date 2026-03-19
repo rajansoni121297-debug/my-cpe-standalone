@@ -1,24 +1,63 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import Login from './components/Login';
+import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
+import Assessments from './components/Assessments';
+import Reports from './components/Reports';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeScreen, setActiveScreen] = useState('dashboard');
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    setActiveScreen('dashboard');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setActiveScreen('dashboard');
+  };
+
+  const handleNavigate = (screen) => {
+    setActiveScreen(screen);
+  };
+
+  const renderScreen = () => {
+    switch (activeScreen) {
+      case 'dashboard':
+        return <Dashboard onNavigate={handleNavigate} />;
+      case 'assessments':
+        return <Assessments onNavigate={handleNavigate} />;
+      case 'reports':
+        return <Reports onNavigate={handleNavigate} />;
+      case 'settings':
+        return (
+          <div style={{ padding: 20 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a2e', margin: '0 0 8px' }}>Settings</h1>
+            <p style={{ color: '#888', fontSize: 14 }}>Settings page coming soon.</p>
+          </div>
+        );
+      case 'billing':
+        return (
+          <div style={{ padding: 20 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a2e', margin: '0 0 8px' }}>Billing</h1>
+            <p style={{ color: '#888', fontSize: 14 }}>Billing page coming soon.</p>
+          </div>
+        );
+      default:
+        return <Dashboard onNavigate={handleNavigate} />;
+    }
+  };
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Layout activeScreen={activeScreen} onNavigate={handleNavigate} onLogout={handleLogout}>
+      {renderScreen()}
+    </Layout>
   );
 }
 
