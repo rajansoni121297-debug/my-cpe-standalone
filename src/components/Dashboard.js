@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'; // eslint-disable-line no-unused-vars
 import './Dashboard.css';
 
 const quickAssignData = [
@@ -17,6 +17,33 @@ const recentActivities = [
   { user: 'Ethan Parker', action: 'submitted', assessment: 'NPO Audit', time: 'March 17, 2026 | 03:24 PM IST' },
   { user: 'Andrew Malcham', action: 'submitted', assessment: 'Governmental Accounting and Financial Reporting', time: 'March 17, 2026 | 03:24 PM IST' },
 ];
+
+const topPerformers = [
+  { rank: 1, name: 'Ethan Parker', score: 95, assessment: 'NPO Audit' },
+  { rank: 2, name: 'Andrew Malcham', score: 88, assessment: 'Governmental Accounting' },
+  { rank: 3, name: 'Priya Sharma', score: 85, assessment: 'QuickBooks - QBO' },
+  { rank: 4, name: 'David Chen', score: 82, assessment: 'UltraTax Software' },
+  { rank: 5, name: 'Manvi Jain', score: 78, assessment: 'Drake Tax Software' },
+];
+
+const upcomingDeadlines = [
+  { name: 'Rajan Soni', date: 'Apr 18, 2026' },
+  { name: 'Priya Sharma', date: 'Apr 22, 2026' },
+  { name: 'David Chen', date: 'Apr 25, 2026' },
+  { name: 'Ethan Parker', date: 'May 01, 2026' },
+  { name: 'Andrew Malcham', date: 'May 10, 2026' },
+];
+
+const assessmentStats = [
+  { label: 'Total Assessments', value: '24', color: '#7162EA' },
+  { label: 'Avg Score', value: '76%', color: '#16a34a' },
+  { label: 'Pass Rate', value: '40%', color: '#ea580c' },
+];
+
+const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+
+const getInitials = (name) =>
+  name.split(' ').map((n) => n[0]).join('').toUpperCase();
 
 const Dashboard = ({ onNavigate }) => {
   return (
@@ -96,6 +123,34 @@ const Dashboard = ({ onNavigate }) => {
               </table>
             </div>
           </div>
+
+          {/* Top Performers Card */}
+          <div className="dash-card">
+            <div className="dash-card-header">
+              <h2 className="dash-card-title">Top Performers</h2>
+              <button className="btn-view-all" onClick={() => onNavigate && onNavigate('reports')}>View All</button>
+            </div>
+            <div className="performers-list">
+              {topPerformers.map((p) => (
+                <div className="performer-item" key={p.rank}>
+                  <span
+                    className="performer-rank"
+                    style={{ color: rankColors[p.rank - 1] || '#aaa' }}
+                  >
+                    #{p.rank}
+                  </span>
+                  <div className="performer-avatar">
+                    {getInitials(p.name)}
+                  </div>
+                  <div className="performer-info">
+                    <span className="performer-name">{p.name}</span>
+                    <span className="performer-assessment">{p.assessment}</span>
+                  </div>
+                  <span className="performer-score">{p.score}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Right Column */}
@@ -129,18 +184,33 @@ const Dashboard = ({ onNavigate }) => {
               <button className="btn-view-all">View All</button>
             </div>
             <div className="deadline-list">
-              <div className="deadline-item">
-                <span className="deadline-name">Rajan Soni</span>
-                <span className="deadline-date">Apr 18, 2026</span>
-                <button className="action-icon-btn" title="View">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                  </svg>
-                </button>
-              </div>
+              {upcomingDeadlines.map((d, idx) => (
+                <div className="deadline-item" key={idx}>
+                  <span className="deadline-name">{d.name}</span>
+                  <span className="deadline-date">{d.date}</span>
+                  <button className="action-icon-btn" title="View">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Assessment Stats Card */}
+          <div className="dash-card">
+            <h2 className="dash-card-title" style={{ marginBottom: '16px' }}>Assessment Statistics</h2>
+            <div className="assessment-stats-grid">
+              {assessmentStats.map((s) => (
+                <div className="assessment-stat-item" key={s.label}>
+                  <span className="assessment-stat-value" style={{ color: s.color }}>{s.value}</span>
+                  <span className="assessment-stat-label">{s.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

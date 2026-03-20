@@ -137,50 +137,108 @@
   color: #bbb;
 }
 
-/* Float label select */
-.filter-select-wrap {
+/* ─── Custom Filter Dropdown ─────────────────────────────── */
+.filter-dropdown {
   position: relative;
-  flex: 1 1 140px;
-  min-width: 120px;
+  flex: 1 1 130px;
+  min-width: 110px;
 }
 
-.filter-float-label {
+.filter-dropdown-label {
   position: absolute;
   top: -8px;
   left: 10px;
-  background: #f5f6fa;
+  background: #fff;
   padding: 0 4px;
   font-size: 11px;
   color: #888;
   font-weight: 500;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
+  white-space: nowrap;
 }
 
-.filter-select {
-  width: 100%;
-  padding: 9px 28px 9px 12px;
+.filter-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px 9px 12px;
   font-size: 13px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  outline: none;
-  font-family: inherit;
-  color: #333;
   background: #fff;
   cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  box-sizing: border-box;
+  gap: 8px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
 }
 
-.filter-select:focus {
+.filter-dropdown-trigger:hover {
+  border-color: #bbb;
+}
+
+.filter-dropdown-trigger.open {
   border-color: #7162EA;
   box-shadow: 0 0 0 3px rgba(113, 98, 234, 0.1);
+}
+
+.filter-dropdown-value {
+  color: #333;
+  flex: 1;
+  font-family: inherit;
+}
+
+.filter-dropdown-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.filter-dropdown-chevron.open {
+  transform: rotate(180deg);
+}
+
+.filter-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.filter-dropdown-item {
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: inherit;
+}
+
+.filter-dropdown-item:hover {
+  background: #f5f3ff;
+  color: #7162EA;
+}
+
+.filter-dropdown-item.selected {
+  background: #7162EA;
+  color: #fff;
+  font-weight: 600;
+}
+
+.filter-dropdown-item.selected:hover {
+  background: #6355d4;
+  color: #fff;
 }
 
 .btn-apply {
@@ -394,6 +452,78 @@
 /* Ensure table fills container */
 .assessment-table {
   min-width: 700px;
+}
+
+/* ─── Pagination ─────────────────────────────────────────── */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #444;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pagination-btn:hover:not(:disabled):not(.active) {
+  background: #f5f3ff;
+  border-color: #7162EA;
+  color: #7162EA;
+}
+
+.pagination-btn.active {
+  background: #7162EA;
+  border-color: #7162EA;
+  color: #fff;
+  font-weight: 700;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-nav {
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.pagination-ellipsis {
+  font-size: 14px;
+  color: #aaa;
+  padding: 0 4px;
+  line-height: 36px;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: #666;
+}
+
+.pagination-info strong {
+  color: #333;
 }
 
 /* ===================================================
@@ -967,7 +1097,7 @@
     flex: 1 1 100%;
   }
 
-  .filter-select-wrap {
+  .filter-dropdown {
     flex: 1 1 calc(50% - 4px);
   }
 
@@ -1017,7 +1147,7 @@
 }
 
 @media (max-width: 1024px) {
-  .filter-select-wrap {
+  .filter-dropdown {
     flex: 0 0 120px;
   }
 }

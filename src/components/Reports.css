@@ -54,14 +54,186 @@
   box-shadow: 0 2px 8px rgba(113, 98, 234, 0.3);
 }
 
-/* Date input filter */
-.filter-date-wrap {
+/* ─── Filter Row ─────────────────────────────────────────── */
+.r-filters-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* Shared Apply / Clear buttons */
+.btn-apply {
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: #7162EA;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-apply:hover {
+  background: #6355d4;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(113, 98, 234, 0.3);
+}
+
+.btn-clear {
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #7162EA;
+  background: none;
+  border: 1px solid #7162EA;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-clear:hover {
+  background: rgba(113, 98, 234, 0.08);
+  transform: translateY(-1px);
+}
+
+/* ─── Custom Filter Dropdown ─────────────────────────────── */
+.r-filter-dropdown {
   position: relative;
-  flex: 1 1 150px;
+  flex: 1 1 130px;
+  min-width: 110px;
+}
+
+.r-filter-dropdown-label {
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  background: #fff;
+  padding: 0 4px;
+  font-size: 11px;
+  color: #888;
+  font-weight: 500;
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.r-filter-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px 9px 12px;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  gap: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.r-filter-dropdown-trigger:hover {
+  border-color: #bbb;
+}
+
+.r-filter-dropdown-trigger.open {
+  border-color: #7162EA;
+  box-shadow: 0 0 0 3px rgba(113, 98, 234, 0.1);
+}
+
+.r-filter-dropdown-value {
+  color: #333;
+  flex: 1;
+  font-family: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.r-filter-dropdown-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.r-filter-dropdown-chevron.open {
+  transform: rotate(180deg);
+}
+
+.r-filter-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  overflow: hidden;
+  animation: rDropdownFadeIn 0.15s ease;
+}
+
+@keyframes rDropdownFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.r-filter-dropdown-item {
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.r-filter-dropdown-item:hover {
+  background: #f5f3ff;
+  color: #7162EA;
+}
+
+.r-filter-dropdown-item.selected {
+  background: #7162EA;
+  color: #fff;
+  font-weight: 600;
+}
+
+.r-filter-dropdown-item.selected:hover {
+  background: #6355d4;
+  color: #fff;
+}
+
+/* ─── Date Filter ────────────────────────────────────────── */
+.r-filter-date-wrap {
+  position: relative;
+  flex: 1 1 148px;
   min-width: 130px;
 }
 
-.filter-date {
+.r-filter-date-label {
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  background: #fff;
+  padding: 0 4px;
+  font-size: 11px;
+  color: #888;
+  font-weight: 500;
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.r-filter-date {
   width: 100%;
   padding: 9px 12px;
   font-size: 13px;
@@ -75,7 +247,7 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.filter-date:focus {
+.r-filter-date:focus {
   border-color: #7162EA;
   box-shadow: 0 0 0 3px rgba(113, 98, 234, 0.1);
 }
@@ -356,19 +528,15 @@
     text-align: center;
   }
 
-  .filters-row {
+  .r-filters-row {
     gap: 8px;
   }
 
-  .search-input-wrap {
-    flex: 1 1 100%;
-  }
-
-  .filter-select-wrap {
+  .r-filter-dropdown {
     flex: 1 1 calc(50% - 4px);
   }
 
-  .filter-date-wrap {
+  .r-filter-date-wrap {
     flex: 1 1 calc(50% - 4px);
   }
 
@@ -387,7 +555,7 @@
     min-width: 1000px;
   }
 
-  .filter-date-wrap {
+  .r-filter-date-wrap {
     flex: 0 0 130px;
   }
 }

@@ -333,6 +333,115 @@
   white-space: nowrap;
 }
 
+/* Top Performers */
+.performers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.performer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background 0.2s ease;
+}
+
+.performer-item:last-child {
+  border-bottom: none;
+}
+
+.performer-item:hover {
+  background: #fafafe;
+}
+
+.performer-rank {
+  font-size: 13px;
+  font-weight: 700;
+  width: 28px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.performer-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7162EA, #a594f9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.performer-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.performer-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.performer-assessment {
+  font-size: 11px;
+  color: #aaa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.performer-score {
+  font-size: 14px;
+  font-weight: 700;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+/* Assessment Statistics */
+.assessment-stats-grid {
+  display: flex;
+  gap: 12px;
+}
+
+.assessment-stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: #fafafe;
+  border-radius: 10px;
+  border: 1px solid #f0f0f5;
+}
+
+.assessment-stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.assessment-stat-label {
+  font-size: 11px;
+  color: #888;
+  font-weight: 500;
+  text-align: center;
+}
+
 /* Empty State */
 .empty-state {
   display: flex;

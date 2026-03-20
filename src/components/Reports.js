@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Reports.css';
 
 const reportData = [
@@ -13,6 +13,53 @@ const reportData = [
   { name: 'Raj Soni', email: 'Rajsoni999999999@yopmail.com', assessment: 'Ethics and Professional Conduct for Accountants', type: 'MCQ', score: '-', result: '-', assignedOn: 'Feb 09 2026', status: 'Lapsed', assignedBy: 'Ajay Test', completedOn: 'Mar 12 2026', proctoring: 'Get Rate', flags: 0 },
   { name: 'Raj Soni', email: 'Rajsoni121212@yopmail.com', assessment: 'Accounting Fundamentals for NFP Organizations', type: 'MCQ', score: '-', result: '-', assignedOn: 'Feb 09 2026', status: 'Lapsed', assignedBy: 'Ajay Test', completedOn: 'Mar 12 2026', proctoring: 'Get Rate', flags: 0 },
 ];
+
+// ─── Custom Dropdown ───────────────────────────────────────────────────────────
+const FilterDropdown = ({ label, value, onChange, options }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="r-filter-dropdown" ref={ref}>
+      <span className="r-filter-dropdown-label">{label}</span>
+      <div
+        className={`r-filter-dropdown-trigger ${open ? 'open' : ''}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="r-filter-dropdown-value">{value || `Select ${label}`}</span>
+        <svg
+          className={`r-filter-dropdown-chevron ${open ? 'open' : ''}`}
+          width="12" height="12" viewBox="0 0 24 24"
+          fill="none" stroke="#666" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+      {open && (
+        <div className="r-filter-dropdown-menu">
+          {options.map((opt) => (
+            <div
+              key={opt.value ?? opt}
+              className={`r-filter-dropdown-item ${value === (opt.value ?? opt) ? 'selected' : ''}`}
+              onClick={() => { onChange(opt.value ?? opt); setOpen(false); }}
+            >
+              {opt.label ?? opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Reports = ({ onNavigate }) => {
   const [search, setSearch] = useState('');
@@ -100,82 +147,73 @@ const Reports = ({ onNavigate }) => {
       </div>
 
       {/* All Filters in Single Row */}
-      <div className="filters-row" style={{ marginBottom: 20 }}>
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Status</label>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="filter-select">
-            <option value="">Select Status</option>
-            <option>Pending</option>
-            <option>Completed</option>
-            <option>Lapsed - Not Attempted</option>
-          </select>
-        </div>
+      <div className="r-filters-row">
+        <FilterDropdown
+          label="Status"
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { label: 'All', value: '' },
+            { label: 'Pending', value: 'Pending' },
+            { label: 'Completed', value: 'Completed' },
+            { label: 'Lapsed - Not Attempted', value: 'Lapsed - Not Attempted' },
+          ]}
+        />
+        <FilterDropdown
+          label="Result"
+          value={resultFilter}
+          onChange={setResultFilter}
+          options={[
+            { label: 'All', value: '' },
+            { label: 'Pass', value: 'Pass' },
+            { label: 'Fail', value: 'Fail' },
+          ]}
+        />
+        <FilterDropdown
+          label="Level"
+          value={level}
+          onChange={setLevel}
+          options={['All', 'Basic', 'Intermediate', 'Advance']}
+        />
+        <FilterDropdown
+          label="Domain"
+          value={domain}
+          onChange={setDomain}
+          options={['All', 'Accounting', 'Auditing', 'Tax', 'Others']}
+        />
 
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Result</label>
-          <select value={resultFilter} onChange={(e) => setResultFilter(e.target.value)} className="filter-select">
-            <option value="">Select Result</option>
-            <option>Pass</option>
-            <option>Fail</option>
-          </select>
-        </div>
-
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Level</label>
-          <select value={level} onChange={(e) => setLevel(e.target.value)} className="filter-select">
-            <option>All</option>
-            <option>Basic</option>
-            <option>Intermediate</option>
-            <option>Advance</option>
-          </select>
-        </div>
-
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Domain</label>
-          <select value={domain} onChange={(e) => setDomain(e.target.value)} className="filter-select">
-            <option>All</option>
-            <option>Accounting</option>
-            <option>Auditing</option>
-            <option>Tax</option>
-            <option>Others</option>
-          </select>
-        </div>
-
-        <div className="filter-date-wrap">
-          <label className="filter-float-label">Assigned On</label>
+        <div className="r-filter-date-wrap">
+          <span className="r-filter-date-label">Assigned On</span>
           <input
             type="date"
-            className="filter-date"
+            className="r-filter-date"
             value={assignedOn}
             onChange={(e) => setAssignedOn(e.target.value)}
           />
         </div>
 
-        <div className="filter-date-wrap">
-          <label className="filter-float-label">Completed On</label>
+        <div className="r-filter-date-wrap">
+          <span className="r-filter-date-label">Completed On</span>
           <input
             type="date"
-            className="filter-date"
+            className="r-filter-date"
             value={completedOn}
             onChange={(e) => setCompletedOn(e.target.value)}
           />
         </div>
 
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Proctoring Verdict</label>
-          <select value={proctoringVerdict} onChange={(e) => setProctoringVerdict(e.target.value)} className="filter-select">
-            <option>All</option>
-            <option>Clean</option>
-            <option>Need to review</option>
-          </select>
-        </div>
-
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Assigned By</label>
-          <select value={assignedBy} onChange={(e) => setAssignedBy(e.target.value)} className="filter-select">
-            <option>All</option>
-          </select>
-        </div>
+        <FilterDropdown
+          label="Proctoring Verdict"
+          value={proctoringVerdict}
+          onChange={setProctoringVerdict}
+          options={['All', 'Clean', 'Need to review']}
+        />
+        <FilterDropdown
+          label="Assigned By"
+          value={assignedBy}
+          onChange={setAssignedBy}
+          options={['All']}
+        />
 
         <button className="btn-apply">Apply</button>
         <button className="btn-clear" onClick={clearFilters}>Clear</button>

@@ -1,16 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './Assessments.css';
 
 const assessmentData = [
-  { name: 'QuickBooks - QBO', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'QuickBooks - QBO', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 2, completedNum: 1, completedDen: 2 },
   { name: 'QuickBooks - QBO', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
-  { name: 'CCH Axcess + ProSystem fx Audit Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'SIM', count: 4 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
-  { name: 'UltraTax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'SUB', count: 5 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
-  { name: 'Lacerte Tax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 15 }, { type: 'SIM', count: 3 }, { type: 'SUB', count: 2 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'CCH Axcess + ProSystem fx Audit Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'SIM', count: 4 }], duration: '40', invited: 1, completedNum: 0, completedDen: 1 },
+  { name: 'UltraTax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'SUB', count: 5 }], duration: '40', invited: 1, completedNum: 0, completedDen: 1 },
+  { name: 'Lacerte Tax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 15 }, { type: 'SIM', count: 3 }, { type: 'SUB', count: 2 }], duration: '40', invited: 1, completedNum: 0, completedDen: 1 },
   { name: 'Drake Tax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
   { name: 'CCH Axcess Tax Software', level: 'Basic', questionTypes: [{ type: 'AI Video' }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
-  { name: 'NPO Audit', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'AI Video' }], duration: '40', invited: 1, completedNum: 1, completedDen: 1 },
-  { name: 'Yellow Book (GAGAS)', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 10 }, { type: 'SIM', count: 5 }, { type: 'SUB', count: 3 }, { type: 'AI Video' }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'NPO Audit', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'AI Video' }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'Yellow Book (GAGAS)', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 10 }, { type: 'SIM', count: 5 }, { type: 'SUB', count: 3 }, { type: 'AI Video' }], duration: '40', invited: 1, completedNum: 0, completedDen: 1 },
+  { name: 'NPO Audit', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 3, completedNum: 2, completedDen: 3 },
+  { name: 'ProConnect Tax Software', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'Sage 50 Accounting', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'SIM', count: 3 }], duration: '45', invited: 2, completedNum: 1, completedDen: 2 },
+  { name: 'Xero Accounting', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'AI Video' }], duration: '40', invited: 1, completedNum: 1, completedDen: 1 },
+  { name: 'Governmental Accounting', level: 'Advance', questionTypes: [{ type: 'MCQ', count: 25 }, { type: 'SUB', count: 5 }], duration: '60', invited: 0, completedNum: 0, completedDen: 0 },
+  { name: 'Financial Reporting Standards', level: 'Intermediate', questionTypes: [{ type: 'MCQ', count: 20 }, { type: 'SIM', count: 5 }], duration: '50', invited: 3, completedNum: 2, completedDen: 3 },
+  { name: 'CPA Ethics and Professional Conduct', level: 'Basic', questionTypes: [{ type: 'MCQ', count: 20 }], duration: '40', invited: 0, completedNum: 0, completedDen: 0 },
 ];
 
 const qTypeColors = {
@@ -22,7 +29,127 @@ const qTypeColors = {
 };
 
 const PRICE_PER_ASSESSMENT = 99;
+const ITEMS_PER_PAGE = 10;
 
+// ─── Custom Dropdown ───────────────────────────────────────────────────────────
+const FilterDropdown = ({ label, value, onChange, options }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="filter-dropdown" ref={ref}>
+      <span className="filter-dropdown-label">{label}</span>
+      <div
+        className={`filter-dropdown-trigger ${open ? 'open' : ''}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="filter-dropdown-value">{value}</span>
+        <svg
+          className={`filter-dropdown-chevron ${open ? 'open' : ''}`}
+          width="12" height="12" viewBox="0 0 24 24"
+          fill="none" stroke="#666" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+      {open && (
+        <div className="filter-dropdown-menu">
+          {options.map((opt) => (
+            <div
+              key={opt}
+              className={`filter-dropdown-item ${value === opt ? 'selected' : ''}`}
+              onClick={() => { onChange(opt); setOpen(false); }}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Pagination ────────────────────────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, totalRecords, itemsPerPage, onPageChange }) => {
+  const startRecord = totalRecords === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endRecord = Math.min(currentPage * itemsPerPage, totalRecords);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const delta = 2;
+    const left = Math.max(1, currentPage - delta);
+    const right = Math.min(totalPages, currentPage + delta);
+    for (let i = left; i <= right; i++) pages.push(i);
+    return pages;
+  };
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="pagination-bar">
+      <div className="pagination-controls">
+        <button
+          className="pagination-btn pagination-nav"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          ← Back
+        </button>
+
+        {getPageNumbers()[0] > 1 && (
+          <>
+            <button className="pagination-btn" onClick={() => onPageChange(1)}>1</button>
+            {getPageNumbers()[0] > 2 && <span className="pagination-ellipsis">…</span>}
+          </>
+        )}
+
+        {getPageNumbers().map((p) => (
+          <button
+            key={p}
+            className={`pagination-btn ${p === currentPage ? 'active' : ''}`}
+            onClick={() => onPageChange(p)}
+          >
+            {p}
+          </button>
+        ))}
+
+        {getPageNumbers()[getPageNumbers().length - 1] < totalPages && (
+          <>
+            {getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1 && (
+              <span className="pagination-ellipsis">…</span>
+            )}
+            <button className="pagination-btn" onClick={() => onPageChange(totalPages)}>
+              {totalPages}
+            </button>
+          </>
+        )}
+
+        <button
+          className="pagination-btn pagination-nav"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next →
+        </button>
+      </div>
+
+      <div className="pagination-info">
+        Showing <strong>{startRecord}–{endRecord}</strong> of <strong>{totalRecords}</strong> Records
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 const Assessments = ({ onNavigate }) => {
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('All');
@@ -30,6 +157,7 @@ const Assessments = ({ onNavigate }) => {
   const [role, setRole] = useState('All');
   const [country, setCountry] = useState('All');
   const [selectedRows, setSelectedRows] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -42,8 +170,20 @@ const Assessments = ({ onNavigate }) => {
   const filteredData = assessmentData.filter((item) => {
     if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (level !== 'All' && item.level !== level) return false;
+    if (domain !== 'All') return false; // placeholder
     return true;
   });
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, level, domain, role, country]);
+
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const toggleRow = (idx) => {
     setSelectedRows((prev) =>
@@ -52,10 +192,12 @@ const Assessments = ({ onNavigate }) => {
   };
 
   const toggleAll = () => {
-    if (selectedRows.length === filteredData.length) {
-      setSelectedRows([]);
+    const pageIndices = paginatedData.map((_, i) => (currentPage - 1) * ITEMS_PER_PAGE + i);
+    const allSelected = pageIndices.every((i) => selectedRows.includes(i));
+    if (allSelected) {
+      setSelectedRows((prev) => prev.filter((i) => !pageIndices.includes(i)));
     } else {
-      setSelectedRows(filteredData.map((_, i) => i));
+      setSelectedRows((prev) => [...new Set([...prev, ...pageIndices])]);
     }
   };
 
@@ -67,19 +209,14 @@ const Assessments = ({ onNavigate }) => {
     setCountry('All');
   };
 
-  // Open modal
   const openAssignModal = () => {
     if (selectedRows.length === 0) return;
     const selected = selectedRows.map((idx) => ({ ...filteredData[idx], originalIdx: idx }));
     setModalAssessments(selected);
-
-    // Initialize question toggles: all checked by default
     const toggles = {};
     selected.forEach((a, i) => {
       toggles[i] = {};
-      a.questionTypes.forEach((qt) => {
-        toggles[i][qt.type] = true;
-      });
+      a.questionTypes.forEach((qt) => { toggles[i][qt.type] = true; });
     });
     setQuestionToggles(toggles);
     setUsers([{ email: '', firstName: '', lastName: '' }]);
@@ -88,15 +225,10 @@ const Assessments = ({ onNavigate }) => {
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  const closeModal = () => setShowModal(false);
 
-  // Close modal on Escape key
   const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Escape' && showModal) {
-      closeModal();
-    }
+    if (e.key === 'Escape' && showModal) closeModal();
   }, [showModal]);
 
   useEffect(() => {
@@ -104,58 +236,39 @@ const Assessments = ({ onNavigate }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Remove assessment from modal and uncheck in main table
   const removeModalAssessment = (modalIdx) => {
     const assessment = modalAssessments[modalIdx];
-    // Uncheck from main table
     setSelectedRows((prev) => prev.filter((i) => i !== assessment.originalIdx));
-    // Remove from modal list
     const newAssessments = modalAssessments.filter((_, i) => i !== modalIdx);
     setModalAssessments(newAssessments);
-    // Rebuild toggles with new indices
     const newToggles = {};
     newAssessments.forEach((a, i) => {
       const oldIdx = modalAssessments.indexOf(a);
       newToggles[i] = questionToggles[oldIdx] || {};
     });
     setQuestionToggles(newToggles);
-    // Close modal if no assessments left
-    if (newAssessments.length === 0) {
-      setShowModal(false);
-    }
+    if (newAssessments.length === 0) setShowModal(false);
   };
 
-  // Toggle question type for an assessment
   const toggleQuestionType = (assessmentIdx, qType) => {
     setQuestionToggles((prev) => ({
       ...prev,
-      [assessmentIdx]: {
-        ...prev[assessmentIdx],
-        [qType]: !prev[assessmentIdx]?.[qType],
-      },
+      [assessmentIdx]: { ...prev[assessmentIdx], [qType]: !prev[assessmentIdx]?.[qType] },
     }));
   };
 
-  // User row management
-  const addUserRow = () => {
-    setUsers((prev) => [...prev, { email: '', firstName: '', lastName: '' }]);
-  };
+  const addUserRow = () => setUsers((prev) => [...prev, { email: '', firstName: '', lastName: '' }]);
+  const removeUserRow = (idx) => { if (users.length > 1) setUsers((prev) => prev.filter((_, i) => i !== idx)); };
+  const updateUser = (idx, field, value) => setUsers((prev) => prev.map((u, i) => i === idx ? { ...u, [field]: value } : u));
 
-  const removeUserRow = (idx) => {
-    if (users.length <= 1) return;
-    setUsers((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const updateUser = (idx, field, value) => {
-    setUsers((prev) => prev.map((u, i) => (i === idx ? { ...u, [field]: value } : u)));
-  };
-
-  // Calculations
   const numAssessments = modalAssessments.length;
   const numUsers = users.length;
   const totalAssessments = numAssessments * numUsers;
   const totalPayment = totalAssessments * PRICE_PER_ASSESSMENT;
   const amountPerUser = numAssessments * PRICE_PER_ASSESSMENT;
+
+  const pageIndices = paginatedData.map((_, i) => (currentPage - 1) * ITEMS_PER_PAGE + i);
+  const allPageSelected = pageIndices.length > 0 && pageIndices.every((i) => selectedRows.includes(i));
 
   return (
     <div className="assessments-page">
@@ -202,40 +315,10 @@ const Assessments = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Level</label>
-          <select value={level} onChange={(e) => setLevel(e.target.value)} className="filter-select">
-            <option>All</option>
-            <option>Basic</option>
-            <option>Intermediate</option>
-            <option>Advance</option>
-          </select>
-        </div>
-
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Domain</label>
-          <select value={domain} onChange={(e) => setDomain(e.target.value)} className="filter-select">
-            <option>All</option>
-            <option>Accounting</option>
-            <option>Auditing</option>
-            <option>Tax</option>
-            <option>Others</option>
-          </select>
-        </div>
-
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Role</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="filter-select">
-            <option>All</option>
-          </select>
-        </div>
-
-        <div className="filter-select-wrap">
-          <label className="filter-float-label">Country</label>
-          <select value={country} onChange={(e) => setCountry(e.target.value)} className="filter-select">
-            <option>All</option>
-          </select>
-        </div>
+        <FilterDropdown label="Level" value={level} onChange={setLevel} options={['All', 'Basic', 'Intermediate', 'Advance']} />
+        <FilterDropdown label="Domain" value={domain} onChange={setDomain} options={['All', 'Accounting', 'Auditing', 'Tax', 'Others']} />
+        <FilterDropdown label="Role" value={role} onChange={setRole} options={['All']} />
+        <FilterDropdown label="Country" value={country} onChange={setCountry} options={['All']} />
 
         <button className="btn-apply">Apply</button>
         <button className="btn-clear" onClick={clearFilters}>Clear All</button>
@@ -244,7 +327,7 @@ const Assessments = ({ onNavigate }) => {
       {/* Info Banner */}
       <div className="info-banner">
         <div className="info-banner-left">
-          <span className="info-banner-text">You can assign any assessment for a fee of <strong>$99 per assessment</strong>.</span>
+          <span className="info-banner-text">Assign assessments to external candidates for informed hiring decisions – <strong>$99 per assessment</strong>.</span>
           <span className="free-credit-badge">1 Free Assessment Credit Available</span>
         </div>
         <span className="info-banner-link">
@@ -261,11 +344,7 @@ const Assessments = ({ onNavigate }) => {
           <thead>
             <tr>
               <th className="th-check">
-                <input
-                  type="checkbox"
-                  checked={selectedRows.length === filteredData.length && filteredData.length > 0}
-                  onChange={toggleAll}
-                />
+                <input type="checkbox" checked={allPageSelected} onChange={toggleAll} />
               </th>
               <th>Assessment Name</th>
               <th>Level</th>
@@ -277,78 +356,80 @@ const Assessments = ({ onNavigate }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item, idx) => (
-              <tr key={idx} className={selectedRows.includes(idx) ? 'row-selected' : ''}>
-                <td className="td-check">
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.includes(idx)}
-                    onChange={() => toggleRow(idx)}
-                  />
-                </td>
-                <td className="td-name">{item.name}</td>
-                <td>{item.level}</td>
-                <td>
-                  <div className="question-types">
-                    {item.questionTypes.map((qt, i) => {
-                      const colors = qTypeColors[qt.type] || qTypeColors['MCQ'];
-                      return (
-                        <span
-                          key={i}
-                          className="q-type-tag"
-                          style={{ background: colors.bg, color: colors.color, border: `1px solid ${colors.border}` }}
-                        >
-                          {qt.count ? `${qt.count} ${qt.type}` : qt.type}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </td>
-                <td>{item.duration}</td>
-                <td>
-                  <span className={item.invited > 0 ? 'invited-green' : 'invited-zero'}>
-                    {item.invited}
-                  </span>
-                </td>
-                <td>{item.completedDen > 0 ? `${item.completedNum}/${item.completedDen}` : '-'}</td>
-                <td>
-                  <div className="action-icons">
-                    {/* Assign users icon */}
-                    <button className="action-icon-btn" title="Assign Users">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <line x1="20" y1="8" x2="20" y2="14"></line>
-                        <line x1="23" y1="11" x2="17" y2="11"></line>
-                      </svg>
-                    </button>
-                    {/* Bell icon */}
-                    <button className="action-icon-btn" title="Send Notification">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                      </svg>
-                    </button>
-                    {/* View icon */}
-                    <button className="action-icon-btn" title="View">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {paginatedData.map((item, idx) => {
+              const globalIdx = (currentPage - 1) * ITEMS_PER_PAGE + idx;
+              return (
+                <tr key={globalIdx} className={selectedRows.includes(globalIdx) ? 'row-selected' : ''}>
+                  <td className="td-check">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(globalIdx)}
+                      onChange={() => toggleRow(globalIdx)}
+                    />
+                  </td>
+                  <td className="td-name">{item.name}</td>
+                  <td>{item.level}</td>
+                  <td>
+                    <div className="question-types">
+                      {item.questionTypes.map((qt, i) => {
+                        const colors = qTypeColors[qt.type] || qTypeColors['MCQ'];
+                        return (
+                          <span key={i} className="q-type-tag" style={{ background: colors.bg, color: colors.color, border: `1px solid ${colors.border}` }}>
+                            {qt.count ? `${qt.count} ${qt.type}` : qt.type}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </td>
+                  <td>{item.duration}</td>
+                  <td>
+                    <span className={item.invited > 0 ? 'invited-green' : 'invited-zero'}>{item.invited}</span>
+                  </td>
+                  <td>{item.completedDen > 0 ? `${item.completedNum}/${item.completedDen}` : '-'}</td>
+                  <td>
+                    <div className="action-icons">
+                      <button className="action-icon-btn" title="Assign Users">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="8.5" cy="7" r="4"></circle>
+                          <line x1="20" y1="8" x2="20" y2="14"></line>
+                          <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                      </button>
+                      <button className="action-icon-btn" title="Send Notification">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                      </button>
+                      <button className="action-icon-btn" title="View">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalRecords={filteredData.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        onPageChange={setCurrentPage}
+      />
 
       {/* ===== Assign Assessment Modal ===== */}
       {showModal && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
           <div className="modal-container">
-            {/* Modal Header */}
             <div className="modal-header">
               <h2 className="modal-title">Assign Assessment</h2>
               <button className="modal-close-btn" onClick={closeModal}>
@@ -360,7 +441,7 @@ const Assessments = ({ onNavigate }) => {
             </div>
 
             <div className="modal-body">
-              {/* ===== Step 1: Assessments List ===== */}
+              {/* Step 1 */}
               <div className="modal-step">
                 <div className="modal-step-header" onClick={() => setStep1Open(!step1Open)}>
                   <div className="modal-step-header-left">
@@ -387,7 +468,6 @@ const Assessments = ({ onNavigate }) => {
                     </span>
                   </div>
                 </div>
-
                 <div className={`modal-step-content ${step1Open ? 'expanded' : 'collapsed'}`}>
                   <div className="modal-table-wrap">
                     <table className="modal-assessment-table">
@@ -412,21 +492,9 @@ const Assessments = ({ onNavigate }) => {
                                   const colors = qTypeColors[qt.type] || qTypeColors['MCQ'];
                                   const isChecked = questionToggles[idx]?.[qt.type] !== false;
                                   return (
-                                    <label
-                                      key={qi}
-                                      className={`modal-q-type-chip ${isChecked ? '' : 'unchecked'}`}
-                                      style={{
-                                        background: isChecked ? colors.bg : '#f5f5f5',
-                                        color: isChecked ? colors.color : '#aaa',
-                                        border: `1px solid ${isChecked ? colors.border : '#ddd'}`,
-                                      }}
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={() => toggleQuestionType(idx, qt.type)}
-                                        className="modal-q-checkbox"
-                                      />
+                                    <label key={qi} className={`modal-q-type-chip ${isChecked ? '' : 'unchecked'}`}
+                                      style={{ background: isChecked ? colors.bg : '#f5f5f5', color: isChecked ? colors.color : '#aaa', border: `1px solid ${isChecked ? colors.border : '#ddd'}` }}>
+                                      <input type="checkbox" checked={isChecked} onChange={() => toggleQuestionType(idx, qt.type)} className="modal-q-checkbox" />
                                       {qt.type}{qt.count ? `(${qt.count})` : ''}
                                     </label>
                                   );
@@ -434,17 +502,9 @@ const Assessments = ({ onNavigate }) => {
                               </div>
                             </td>
                             <td>{item.duration}</td>
+                            <td><span className={item.invited > 0 ? 'invited-green' : 'invited-zero'}>{item.invited}</span></td>
                             <td>
-                              <span className={item.invited > 0 ? 'invited-green' : 'invited-zero'}>
-                                {item.invited}
-                              </span>
-                            </td>
-                            <td>
-                              <button
-                                className="modal-remove-btn"
-                                title="Remove assessment"
-                                onClick={() => removeModalAssessment(idx)}
-                              >
+                              <button className="modal-remove-btn" title="Remove" onClick={() => removeModalAssessment(idx)}>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <circle cx="12" cy="12" r="10"></circle>
                                   <line x1="8" y1="12" x2="16" y2="12"></line>
@@ -459,7 +519,7 @@ const Assessments = ({ onNavigate }) => {
                 </div>
               </div>
 
-              {/* ===== Step 2: Add Users ===== */}
+              {/* Step 2 */}
               <div className="modal-step">
                 <div className="modal-step-header" onClick={() => setStep2Open(!step2Open)}>
                   <div className="modal-step-header-left">
@@ -486,9 +546,7 @@ const Assessments = ({ onNavigate }) => {
                     </span>
                   </div>
                 </div>
-
                 <div className={`modal-step-content ${step2Open ? 'expanded' : 'collapsed'}`}>
-                  {/* CSV links */}
                   <div className="modal-csv-links">
                     <a href="#download" className="csv-link" onClick={(e) => e.preventDefault()}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7162EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -508,8 +566,6 @@ const Assessments = ({ onNavigate }) => {
                       Import from CSV
                     </a>
                   </div>
-
-                  {/* User rows header */}
                   <div className="user-rows-header">
                     <span className="user-col-header user-col-email">Email</span>
                     <span className="user-col-header user-col-fname">First Name</span>
@@ -518,50 +574,22 @@ const Assessments = ({ onNavigate }) => {
                     <span className="user-col-header user-col-amount">Amount</span>
                     <span className="user-col-header user-col-action"></span>
                   </div>
-
-                  {/* User rows */}
                   {users.map((user, idx) => (
                     <div className="user-row" key={idx}>
                       <div className="user-col user-col-email">
-                        <input
-                          type="email"
-                          placeholder="Enter email"
-                          value={user.email}
-                          onChange={(e) => updateUser(idx, 'email', e.target.value)}
-                          className="user-input"
-                        />
+                        <input type="email" placeholder="Enter email" value={user.email} onChange={(e) => updateUser(idx, 'email', e.target.value)} className="user-input" />
                       </div>
                       <div className="user-col user-col-fname">
-                        <input
-                          type="text"
-                          placeholder="First name"
-                          value={user.firstName}
-                          onChange={(e) => updateUser(idx, 'firstName', e.target.value)}
-                          className="user-input"
-                        />
+                        <input type="text" placeholder="First name" value={user.firstName} onChange={(e) => updateUser(idx, 'firstName', e.target.value)} className="user-input" />
                       </div>
                       <div className="user-col user-col-lname">
-                        <input
-                          type="text"
-                          placeholder="Last name"
-                          value={user.lastName}
-                          onChange={(e) => updateUser(idx, 'lastName', e.target.value)}
-                          className="user-input"
-                        />
+                        <input type="text" placeholder="Last name" value={user.lastName} onChange={(e) => updateUser(idx, 'lastName', e.target.value)} className="user-input" />
                       </div>
-                      <div className="user-col user-col-num">
-                        <span className="user-readonly-value">{numAssessments}</span>
-                      </div>
-                      <div className="user-col user-col-amount">
-                        <span className="user-readonly-value">${amountPerUser}</span>
-                      </div>
+                      <div className="user-col user-col-num"><span className="user-readonly-value">{numAssessments}</span></div>
+                      <div className="user-col user-col-amount"><span className="user-readonly-value">${amountPerUser}</span></div>
                       <div className="user-col user-col-action">
                         {users.length > 1 && (
-                          <button
-                            className="modal-remove-btn"
-                            title="Remove user"
-                            onClick={() => removeUserRow(idx)}
-                          >
+                          <button className="modal-remove-btn" title="Remove user" onClick={() => removeUserRow(idx)}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <circle cx="12" cy="12" r="10"></circle>
                               <line x1="8" y1="12" x2="16" y2="12"></line>
@@ -571,7 +599,6 @@ const Assessments = ({ onNavigate }) => {
                       </div>
                     </div>
                   ))}
-
                   <button className="btn-add-user" onClick={addUserRow}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -583,7 +610,6 @@ const Assessments = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Pricing Summary */}
             <div className="modal-pricing-bar">
               <div className="pricing-card">
                 <span className="pricing-label">Price Per User</span>
@@ -599,7 +625,6 @@ const Assessments = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Footer Buttons */}
             <div className="modal-footer">
               <button className="btn-modal-cancel" onClick={closeModal}>Cancel</button>
               <button className="btn-modal-proceed">Proceed to Payment</button>
